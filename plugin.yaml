@@ -1,0 +1,48 @@
+apiVersion: nap.nupi.ai/v1alpha1
+kind: Plugin
+type: adapter
+metadata:
+  name: Nupi AI Mixed (Vercel AI SDK)
+  catalog: ai.nupi
+  slug: ai-mixed-vercel-ai
+  description: Universal AI adapter supporting multiple providers via Vercel AI SDK
+  version: 1.0.0
+spec:
+  slot: ai
+  homepage: https://github.com/nupi-ai/plugin-ai-mixed-vercel-ai
+  compatibility:
+    nupi: ">=0.0.0-dev"
+  entrypoint:
+    runtime: js
+    command: src/index.ts
+    args: []
+    transport: process
+    listenEnv: NUPI_ADAPTER_LISTEN_ADDR
+    readyTimeout: 30s
+    shutdownTimeout: 15s
+  options:
+    provider:
+      type: string
+      default: openai
+      description: AI provider name (openai, anthropic, google, ollama, or any openai-compatible)
+    model:
+      type: string
+      default: gpt-4o-mini
+      description: Model identifier (provider-specific)
+    api_key:
+      type: string
+      description: API key for the provider (not needed for Ollama)
+    base_url:
+      type: string
+      description: Custom base URL (for openai-compatible or Ollama)
+    max_tokens:
+      type: integer
+      default: 1024
+      description: Maximum tokens in response
+    temperature:
+      type: number
+      default: 0.7
+      description: Sampling temperature (0.0-2.0)
+  telemetry:
+    stdout: true
+    stderr: true

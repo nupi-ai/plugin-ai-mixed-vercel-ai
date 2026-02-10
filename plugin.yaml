@@ -14,7 +14,7 @@ spec:
     nupi: ">=0.0.0-dev"
   entrypoint:
     runtime: js
-    command: src/index.ts
+    command: ./index.js
     args: []
     transport: process
     listenEnv: NUPI_ADAPTER_LISTEN_ADDR

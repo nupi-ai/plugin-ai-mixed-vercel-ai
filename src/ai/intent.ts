@@ -8,9 +8,9 @@ import type { ActionType } from '../proto/nupi/nap/v1/ActionType';
 
 const IntentSchema = z.object({
   action: z.enum(['command', 'speak', 'clarify', 'noop']),
-  sessionRef: z.string().optional(),
-  command: z.string().optional(),
-  text: z.string().optional(),
+  sessionRef: z.string().nullable(),
+  command: z.string().nullable(),
+  text: z.string().nullable(),
   reasoning: z.string(),
   confidence: z.number().min(0).max(1),
 });
@@ -75,9 +75,9 @@ export async function resolveIntent(
       promptId: request.promptId,
       actions: [{
         type: actionTypeToProto(object.action),
-        sessionRef: object.sessionRef || request.sessionId,
-        command: object.command || '',
-        text: object.text || '',
+        sessionRef: object.sessionRef ?? request.sessionId,
+        command: object.command ?? '',
+        text: object.text ?? '',
         metadata: {},
       }],
       reasoning: object.reasoning,

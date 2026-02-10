@@ -1,0 +1,27 @@
+{
+  "name": "plugin-ai-mixed-vercel-ai",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outdir=dist --target=bun",
+    "proto:sync": "./scripts/sync-proto.sh",
+    "proto:gen": "./scripts/gen-types.sh",
+    "proto": "bun run proto:sync && bun run proto:gen",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ai": "^4.3",
+    "@ai-sdk/anthropic": "^1.2",
+    "@ai-sdk/openai": "^1.3",
+    "@ai-sdk/google": "^1.2",
+    "@grpc/grpc-js": "^1.12",
+    "@grpc/proto-loader": "^0.7",
+    "zod": "^3.24"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7"
+  }
+}

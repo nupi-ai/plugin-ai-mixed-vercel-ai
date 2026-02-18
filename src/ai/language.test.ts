@@ -36,34 +36,25 @@ describe('resolveLanguageInstruction', () => {
     );
   });
 
-  test('specific code with metadata ignores metadata', () => {
+  test('operator-defined value with metadata ignores metadata', () => {
     const meta = { 'nupi.lang.english': 'Polish', 'nupi.lang.iso1': 'pl' };
-    expect(resolveLanguageInstruction('en', meta)).toBe(
+    expect(resolveLanguageInstruction('English', meta)).toBe(
       'Always respond in English regardless of the input language.'
     );
   });
 
-  test('specific code without metadata uses code name', () => {
-    expect(resolveLanguageInstruction('de', undefined)).toBe(
-      'Always respond in German regardless of the input language.'
+  test('operator-defined value without metadata passes through', () => {
+    expect(resolveLanguageInstruction('Deutsch', undefined)).toBe(
+      'Always respond in Deutsch regardless of the input language.'
     );
   });
 
-  test('specific code resolves common languages', () => {
-    expect(resolveLanguageInstruction('fr', {})).toBe(
-      'Always respond in French regardless of the input language.'
+  test('operator-defined value passes through as-is', () => {
+    expect(resolveLanguageInstruction('Polish', {})).toBe(
+      'Always respond in Polish regardless of the input language.'
     );
     expect(resolveLanguageInstruction('ja', {})).toBe(
-      'Always respond in Japanese regardless of the input language.'
-    );
-    expect(resolveLanguageInstruction('es', {})).toBe(
-      'Always respond in Spanish regardless of the input language.'
-    );
-  });
-
-  test('unknown specific code uses uppercase code', () => {
-    expect(resolveLanguageInstruction('xx', {})).toBe(
-      'Always respond in XX regardless of the input language.'
+      'Always respond in ja regardless of the input language.'
     );
   });
 

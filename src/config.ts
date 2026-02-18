@@ -5,6 +5,7 @@ export interface Config {
   baseUrl?: string;
   maxTokens: number;
   temperature: number;
+  language: string;
 }
 
 export function loadConfig(): Config {
@@ -19,6 +20,7 @@ export function loadConfig(): Config {
       baseUrl: undefined,
       maxTokens: 1024,
       temperature: 0.7,
+      language: 'client',
     };
   }
 
@@ -30,5 +32,6 @@ export function loadConfig(): Config {
     baseUrl: json.base_url,
     maxTokens: json.max_tokens || 1024,
     temperature: json.temperature || 0.7,
+    language: (json.language || 'client').trim().toLowerCase(),
   };
 }

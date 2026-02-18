@@ -5,6 +5,7 @@ import type { Config } from '../config';
 import type { ResolveIntentRequest__Output } from '../proto/nupi/nap/v1/ResolveIntentRequest';
 import type { ResolveIntentResponse } from '../proto/nupi/nap/v1/ResolveIntentResponse';
 import type { ActionType } from '../proto/nupi/nap/v1/ActionType';
+import { resolveLanguageInstruction } from './language';
 
 const IntentSchema = z.object({
   action: z.enum(['command', 'speak', 'clarify', 'noop']),
@@ -58,8 +59,14 @@ export async function resolveIntent(
   config: Config
 ): Promise<ResolveIntentResponse> {
   // Use pre-built prompts from Nupi's Prompts Engine if available
-  const systemPrompt = request.systemPrompt || buildFallbackSystemPrompt(request);
+  let systemPrompt = request.systemPrompt || buildFallbackSystemPrompt(request);
   const userPrompt = request.userPrompt || request.transcript;
+
+  // Append language instruction based on config mode and request metadata.
+  const langInstruction = resolveLanguageInstruction(config.language, request.metadata);
+  if (langInstruction) {
+    systemPrompt = `${systemPrompt}\n\n${langInstruction}`;
+  }
 
   try {
     const { object } = await generateObject({

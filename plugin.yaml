@@ -43,6 +43,16 @@ spec:
       type: number
       default: 0.7
       description: Sampling temperature (0.0-2.0)
+    language:
+      type: string
+      default: client
+      description: >
+        Language mode for AI responses. "client" (default) reads the language
+        from the nupi.lang.english request metadata propagated by the daemon;
+        falls back to auto-detect if no metadata is present. "auto" instructs the
+        AI to detect the user's language and respond in the same language. A specific
+        ISO 639-1 code (e.g. "en", "de") forces the AI to always respond in that
+        language regardless of input.
   telemetry:
     stdout: true
     stderr: true

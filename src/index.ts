@@ -3,7 +3,8 @@ import { createServer } from './grpc/server';
 import { loadConfig } from './config';
 
 const config = loadConfig();
-console.log(`Starting AI adapter: provider=${config.provider}, model=${config.model}`);
+const taskNames = Object.keys(config.tasks);
+console.log(`Starting AI adapter: ${taskNames.length} task(s) configured [${taskNames.join(', ')}]`);
 
 const server = createServer(config);
 

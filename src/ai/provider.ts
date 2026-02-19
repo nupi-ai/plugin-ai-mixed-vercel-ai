@@ -2,52 +2,96 @@ import { anthropic, createAnthropic } from '@ai-sdk/anthropic';
 import { openai, createOpenAI } from '@ai-sdk/openai';
 import { google, createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { LanguageModel } from 'ai';
-import type { Config } from '../config';
+import type { Config, TaskConfig } from '../config';
 
-export function createProvider(config: Config): LanguageModel {
-  const provider = config.provider.toLowerCase();
+/** Error thrown when no task configuration exists for the requested event type. */
+export class MissingTaskConfigError extends Error {
+  constructor(
+    public readonly eventType: string,
+    public readonly availableTasks: string[]
+  ) {
+    super(`No configuration for event_type '${eventType}'. Available tasks: ${availableTasks.join(', ')}`);
+    this.name = 'MissingTaskConfigError';
+  }
+}
 
-  // Known providers with dedicated SDK
-  // When api_key is provided via config, pass it explicitly.
-  // Otherwise fall back to SDK defaults (environment variables).
+export function createModel(taskConfig: TaskConfig): LanguageModel {
+  const provider = taskConfig.provider.toLowerCase();
+
   if (provider === 'anthropic') {
-    if (config.apiKey) {
-      return createAnthropic({ apiKey: config.apiKey })(config.model);
+    if (taskConfig.apiKey) {
+      return createAnthropic({ apiKey: taskConfig.apiKey })(taskConfig.model);
     }
-    return anthropic(config.model);
+    return anthropic(taskConfig.model);
   }
 
   if (provider === 'openai') {
-    if (config.apiKey) {
-      return createOpenAI({ apiKey: config.apiKey })(config.model);
+    if (taskConfig.apiKey) {
+      return createOpenAI({ apiKey: taskConfig.apiKey })(taskConfig.model);
     }
-    return openai(config.model);
+    return openai(taskConfig.model);
   }
 
   if (provider === 'google') {
-    if (config.apiKey) {
-      return createGoogleGenerativeAI({ apiKey: config.apiKey })(config.model);
+    if (taskConfig.apiKey) {
+      return createGoogleGenerativeAI({ apiKey: taskConfig.apiKey })(taskConfig.model);
     }
-    return google(config.model);
+    return google(taskConfig.model);
   }
 
   if (provider === 'ollama') {
     const ollama = createOpenAI({
-      baseURL: config.baseUrl || 'http://localhost:11434/v1',
-      apiKey: 'ollama', // Ollama doesn't need real key
+      baseURL: taskConfig.baseUrl || 'http://localhost:11434/v1',
+      apiKey: taskConfig.apiKey || 'ollama',
     });
-    return ollama(config.model);
+    return ollama(taskConfig.model);
   }
 
   // Any other provider - treat as OpenAI-compatible
-  // User must provide base_url in config
-  if (!config.baseUrl) {
+  if (!taskConfig.baseUrl) {
     throw new Error(`Unknown provider "${provider}". For custom providers, set base_url.`);
   }
 
   const custom = createOpenAI({
-    baseURL: config.baseUrl,
-    apiKey: config.apiKey,
+    baseURL: taskConfig.baseUrl,
+    apiKey: taskConfig.apiKey,
   });
-  return custom(config.model);
+  return custom(taskConfig.model);
+}
+
+/** Result from ModelRouter containing both the model and its task config. */
+export interface RouteResult {
+  model: LanguageModel;
+  taskConfig: TaskConfig;
+}
+
+/** ModelRouter provides lazy-cached model instances per event type. */
+export class ModelRouter {
+  private cache = new Map<string, RouteResult>();
+
+  constructor(private config: Config) {}
+
+  /** Resolves the event type key, applying empty→user_intent fallback. */
+  resolveKey(eventType: string): string {
+    return eventType || 'user_intent';
+  }
+
+  /** Returns the model and task config for the given event type. Caches instances. */
+  getRoute(eventType: string): RouteResult {
+    const key = this.resolveKey(eventType);
+
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+
+    const taskConfig = this.config.tasks[key];
+    if (!taskConfig) {
+      throw new MissingTaskConfigError(key, Object.keys(this.config.tasks));
+    }
+
+    const model = createModel(taskConfig);
+    const result: RouteResult = { model, taskConfig };
+    this.cache.set(key, result);
+    console.log(`ModelRouter: created ${taskConfig.provider}/${taskConfig.model} for '${key}'`);
+    return result;
+  }
 }

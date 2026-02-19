@@ -1,7 +1,7 @@
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { LanguageModel } from 'ai';
-import type { Config } from '../config';
+import type { Config, TaskConfig } from '../config';
 import type { ResolveIntentRequest__Output } from '../proto/nupi/nap/v1/ResolveIntentRequest';
 import type { ResolveIntentResponse } from '../proto/nupi/nap/v1/ResolveIntentResponse';
 import type { ActionType } from '../proto/nupi/nap/v1/ActionType';
@@ -56,7 +56,8 @@ Always include reasoning and confidence (0-1) in your response.`;
 export async function resolveIntent(
   model: LanguageModel,
   request: ResolveIntentRequest__Output,
-  config: Config
+  config: Config,
+  taskConfig: TaskConfig
 ): Promise<ResolveIntentResponse> {
   // Use pre-built prompts from Nupi's Prompts Engine if available
   let systemPrompt = request.systemPrompt || buildFallbackSystemPrompt(request);
@@ -74,8 +75,8 @@ export async function resolveIntent(
       schema: IntentSchema,
       system: systemPrompt,
       prompt: userPrompt,
-      maxTokens: config.maxTokens,
-      temperature: config.temperature,
+      maxTokens: taskConfig.maxTokens,
+      temperature: taskConfig.temperature,
     });
 
     return {

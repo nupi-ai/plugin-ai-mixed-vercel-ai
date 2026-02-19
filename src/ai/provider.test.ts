@@ -21,7 +21,7 @@ describe('ModelRouter', () => {
     const router = new ModelRouter(config);
     const { model, taskConfig } = router.getRoute('user_intent');
     expect(model).toBeDefined();
-    expect(model.modelId).toBe('gpt-4o-mini');
+    expect((model as any).modelId).toBe('gpt-4o-mini');
     expect(taskConfig.provider).toBe('openai');
     expect(taskConfig.model).toBe('gpt-4o-mini');
   });
@@ -43,8 +43,8 @@ describe('ModelRouter', () => {
     const router = new ModelRouter(config);
     const r1 = router.getRoute('user_intent');
     const r2 = router.getRoute('history_summary');
-    expect(r1.model.modelId).toBe('gpt-4o');
-    expect(r2.model.modelId).toBe('gpt-4o-mini');
+    expect((r1.model as any).modelId).toBe('gpt-4o');
+    expect((r2.model as any).modelId).toBe('gpt-4o-mini');
   });
 
   test('getRoute throws MissingTaskConfigError for missing event type', () => {
@@ -71,7 +71,7 @@ describe('ModelRouter', () => {
     const router = new ModelRouter(config);
     const { model } = router.getRoute('');
     expect(model).toBeDefined();
-    expect(model.modelId).toBe('gpt-4o-mini');
+    expect((model as any).modelId).toBe('gpt-4o-mini');
   });
 
   test('getRoute with unspecified defaults to user_intent (cached)', () => {

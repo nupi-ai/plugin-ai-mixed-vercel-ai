@@ -29,14 +29,17 @@ export function createIntentHandler(router: ModelRouter, config: Config) {
     const request = call.request;
     const transcript = request.transcript?.substring(0, 100) || '';
     const eventType = eventTypeToConfigKey(request.eventType);
-    console.log(`ResolveIntent: promptId=${request.promptId}, eventType=${eventType || '(unspecified)'}, transcript="${transcript}${transcript.length >= 100 ? '...' : ''}"`);
+    const toolCount = request.availableTools?.length ?? 0;
+    const historyLen = request.toolHistory?.length ?? 0;
+    console.log(`ResolveIntent: promptId=${request.promptId}, eventType=${eventType || '(unspecified)'}, tools=${toolCount}, historyLen=${historyLen}, transcript="${transcript}${transcript.length >= 100 ? '...' : ''}"`);
 
     try {
       const { model, taskConfig } = router.getRoute(eventType);
       const response = await resolveIntent(model, request, config, taskConfig);
 
       const action = response.actions?.[0];
-      console.log(`Response: action=${action?.type || 'none'}, confidence=${response.confidence}`);
+      const tcCount = response.toolCalls?.length ?? 0;
+      console.log(`Response: action=${action?.type || 'none'}, confidence=${response.confidence}${tcCount > 0 ? `, toolCalls=${tcCount}` : ''}`);
 
       callback(null, response);
     } catch (err) {

@@ -5,7 +5,7 @@ import type { Config } from '../config';
 import type { ProtoGrpcType } from '../proto/ai';
 import type { IntentResolutionServiceHandlers } from '../proto/nupi/nap/v1/IntentResolutionService';
 import { ModelRouter } from '../ai/provider';
-import { createIntentHandler } from './handlers';
+import { createIntentHandler, createEmbeddingHandler } from './handlers';
 
 const PROTO_PATH = path.join(__dirname, '../../proto/nupi/nap/v1/ai.proto');
 const PROTO_INCLUDE = path.join(__dirname, '../../proto');
@@ -29,8 +29,9 @@ export function createServer(config: Config): grpc.Server {
   const server = new grpc.Server();
 
   // Register service
-  const handlers: Pick<IntentResolutionServiceHandlers, 'ResolveIntent'> = {
+  const handlers: Pick<IntentResolutionServiceHandlers, 'ResolveIntent' | 'GenerateEmbeddings'> = {
     ResolveIntent: createIntentHandler(router, config),
+    GenerateEmbeddings: createEmbeddingHandler(config),
   };
 
   server.addService(

@@ -1,7 +1,7 @@
 import { anthropic, createAnthropic } from '@ai-sdk/anthropic';
 import { openai, createOpenAI } from '@ai-sdk/openai';
 import { google, createGoogleGenerativeAI } from '@ai-sdk/google';
-import type { LanguageModel } from 'ai';
+import type { EmbeddingModel, LanguageModel } from 'ai';
 import type { Config, TaskConfig } from '../config';
 
 /** Error thrown when no task configuration exists for the requested event type. */
@@ -57,6 +57,47 @@ export function createModel(taskConfig: TaskConfig): LanguageModel {
     apiKey: taskConfig.apiKey,
   });
   return custom(taskConfig.model);
+}
+
+export function createEmbeddingModel(taskConfig: TaskConfig): EmbeddingModel {
+  const provider = taskConfig.provider.toLowerCase();
+
+  if (provider === 'anthropic') {
+    throw new Error('Anthropic does not support embedding models. Use OpenAI, Google, or Ollama.');
+  }
+
+  if (provider === 'openai') {
+    if (taskConfig.apiKey) {
+      return createOpenAI({ apiKey: taskConfig.apiKey }).embedding(taskConfig.model);
+    }
+    return openai.embedding(taskConfig.model);
+  }
+
+  if (provider === 'google') {
+    if (taskConfig.apiKey) {
+      return createGoogleGenerativeAI({ apiKey: taskConfig.apiKey }).textEmbeddingModel(taskConfig.model);
+    }
+    return google.textEmbeddingModel(taskConfig.model);
+  }
+
+  if (provider === 'ollama') {
+    const ollama = createOpenAI({
+      baseURL: taskConfig.baseUrl || 'http://localhost:11434/v1',
+      apiKey: taskConfig.apiKey || 'ollama',
+    });
+    return ollama.embedding(taskConfig.model);
+  }
+
+  // Any other provider - treat as OpenAI-compatible
+  if (!taskConfig.baseUrl) {
+    throw new Error(`Unknown provider "${provider}". For custom providers, set base_url.`);
+  }
+
+  const custom = createOpenAI({
+    baseURL: taskConfig.baseUrl,
+    apiKey: taskConfig.apiKey,
+  });
+  return custom.embedding(taskConfig.model);
 }
 
 /** Result from ModelRouter containing both the model and its task config. */

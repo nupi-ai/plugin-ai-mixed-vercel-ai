@@ -3,7 +3,7 @@ kind: Plugin
 type: adapter
 metadata:
   name: Nupi AI Mixed (Vercel AI SDK)
-  catalog: ai.nupi
+  namespace: ai.nupi
   slug: ai-mixed-vercel-ai
   description: Universal AI adapter supporting multiple providers via Vercel AI SDK
   version: 1.0.0
@@ -21,28 +21,28 @@ spec:
     readyTimeout: 30s
     shutdownTimeout: 15s
   options:
-    provider:
-      type: string
-      default: openai
-      description: AI provider name (openai, anthropic, google, ollama, or any openai-compatible)
-    model:
-      type: string
-      default: gpt-4o-mini
-      description: Model identifier (provider-specific)
-    api_key:
-      type: string
-      description: API key for the provider (not needed for Ollama)
-    base_url:
-      type: string
-      description: Custom base URL (for openai-compatible or Ollama)
-    max_tokens:
-      type: integer
-      default: 1024
-      description: Maximum tokens in response
-    temperature:
-      type: number
-      default: 0.7
-      description: Sampling temperature (0.0-2.0)
+    tasks:
+      type: object
+      description: >
+        Per-event-type model configuration. Each key is an event type
+        (user_intent, session_output, history_summary, clarification,
+        memory_flush, scheduled_task, session_slug, onboarding) and each
+        value is a complete config block with provider, model, and optional
+        api_key, base_url, max_tokens, temperature. No inheritance between
+        tasks — each must be self-contained.
+      example:
+        user_intent:
+          provider: anthropic
+          model: claude-sonnet-4-5-20250929
+          api_key: sk-ant-...
+          max_tokens: 2048
+          temperature: 0.7
+        history_summary:
+          provider: openai
+          model: gpt-4o-mini
+          api_key: sk-...
+          max_tokens: 1024
+          temperature: 0.3
     language:
       type: string
       default: client

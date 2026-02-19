@@ -4,6 +4,7 @@ import path from 'path';
 import type { Config } from '../config';
 import type { ProtoGrpcType } from '../proto/ai';
 import type { IntentResolutionServiceHandlers } from '../proto/nupi/nap/v1/IntentResolutionService';
+import { ModelRouter } from '../ai/provider';
 import { createIntentHandler } from './handlers';
 
 const PROTO_PATH = path.join(__dirname, '../../proto/nupi/nap/v1/ai.proto');
@@ -22,12 +23,14 @@ export function createServer(config: Config): grpc.Server {
 
   const proto = grpc.loadPackageDefinition(packageDefinition) as unknown as ProtoGrpcType;
 
+  const router = new ModelRouter(config);
+
   // Create server
   const server = new grpc.Server();
 
   // Register service
-  const handlers: IntentResolutionServiceHandlers = {
-    ResolveIntent: createIntentHandler(config),
+  const handlers: Pick<IntentResolutionServiceHandlers, 'ResolveIntent'> = {
+    ResolveIntent: createIntentHandler(router, config),
   };
 
   server.addService(

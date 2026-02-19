@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { ModelRouter, MissingTaskConfigError } from './provider';
+import { ModelRouter, MissingTaskConfigError, createEmbeddingModel } from './provider';
 import type { Config } from '../config';
 
 function makeConfig(tasks: Record<string, { provider: string; model: string }>): Config {
@@ -87,5 +87,51 @@ describe('ModelRouter', () => {
     const router = new ModelRouter(config);
     expect(router.resolveKey('')).toBe('user_intent');
     expect(router.resolveKey('memory_flush')).toBe('memory_flush');
+  });
+});
+
+describe('createEmbeddingModel', () => {
+  test('creates OpenAI embedding model', () => {
+    const model = createEmbeddingModel({
+      provider: 'openai', model: 'text-embedding-3-small', maxTokens: 0, temperature: 0,
+    });
+    expect(model).toBeDefined();
+    expect((model as any).modelId).toBe('text-embedding-3-small');
+  });
+
+  test('creates Google embedding model', () => {
+    const model = createEmbeddingModel({
+      provider: 'google', model: 'text-embedding-004', maxTokens: 0, temperature: 0,
+    });
+    expect(model).toBeDefined();
+    expect((model as any).modelId).toBe('text-embedding-004');
+  });
+
+  test('creates Ollama embedding model via OpenAI-compatible', () => {
+    const model = createEmbeddingModel({
+      provider: 'ollama', model: 'nomic-embed-text', maxTokens: 0, temperature: 0,
+    });
+    expect(model).toBeDefined();
+    expect((model as any).modelId).toBe('nomic-embed-text');
+  });
+
+  test('throws for Anthropic provider (no embedding support)', () => {
+    expect(() => createEmbeddingModel({
+      provider: 'anthropic', model: 'anything', maxTokens: 0, temperature: 0,
+    })).toThrow('Anthropic does not support embedding models');
+  });
+
+  test('creates custom provider embedding model with baseUrl', () => {
+    const model = createEmbeddingModel({
+      provider: 'custom', model: 'my-embed', baseUrl: 'http://localhost:8080/v1', maxTokens: 0, temperature: 0,
+    });
+    expect(model).toBeDefined();
+    expect((model as any).modelId).toBe('my-embed');
+  });
+
+  test('throws for unknown provider without baseUrl', () => {
+    expect(() => createEmbeddingModel({
+      provider: 'unknown', model: 'test', maxTokens: 0, temperature: 0,
+    })).toThrow('Unknown provider "unknown"');
   });
 });

@@ -35,14 +35,14 @@ describe('loadConfig', () => {
           max_tokens: 2048,
           temperature: 0.7,
         },
-        history_summary: {
+        journal_compaction: {
           provider: 'openai',
           model: 'gpt-4o-mini',
           api_key: 'sk-456',
           max_tokens: 512,
           temperature: 0.3,
         },
-        session_slug: {
+        conversation_compaction: {
           provider: 'openai',
           model: 'gpt-4o-mini',
           api_key: 'sk-456',
@@ -56,17 +56,17 @@ describe('loadConfig', () => {
     const config = loadConfig();
     expect(config.language).toBe('polish');
     expect(Object.keys(config.tasks).sort()).toEqual([
-      'history_summary',
-      'session_slug',
+      'conversation_compaction',
+      'journal_compaction',
       'user_intent',
     ]);
     expect(config.tasks.user_intent.provider).toBe('anthropic');
     expect(config.tasks.user_intent.model).toBe('claude-sonnet-4-5-20250929');
     expect(config.tasks.user_intent.apiKey).toBe('sk-ant-123');
     expect(config.tasks.user_intent.maxTokens).toBe(2048);
-    expect(config.tasks.history_summary.provider).toBe('openai');
-    expect(config.tasks.history_summary.temperature).toBe(0.3);
-    expect(config.tasks.session_slug.maxTokens).toBe(128);
+    expect(config.tasks.journal_compaction.provider).toBe('openai');
+    expect(config.tasks.journal_compaction.temperature).toBe(0.3);
+    expect(config.tasks.conversation_compaction.maxTokens).toBe(128);
   });
 
   test('applies default maxTokens and temperature', () => {
@@ -113,7 +113,7 @@ describe('loadConfig', () => {
   test('preserves explicit temperature 0 and max_tokens 0', () => {
     process.env.NUPI_ADAPTER_CONFIG = JSON.stringify({
       tasks: {
-        session_slug: {
+        conversation_compaction: {
           provider: 'openai',
           model: 'gpt-4o-mini',
           temperature: 0,
@@ -122,8 +122,23 @@ describe('loadConfig', () => {
       },
     });
     const config = loadConfig();
-    expect(config.tasks.session_slug.temperature).toBe(0);
-    expect(config.tasks.session_slug.maxTokens).toBe(0);
+    expect(config.tasks.conversation_compaction.temperature).toBe(0);
+    expect(config.tasks.conversation_compaction.maxTokens).toBe(0);
+  });
+
+  test('config with summarization entry parses correctly', () => {
+    process.env.NUPI_ADAPTER_CONFIG = JSON.stringify({
+      tasks: {
+        user_intent: { provider: 'anthropic', model: 'claude-sonnet-4-5-20250929' },
+        summarization: { provider: 'openai', model: 'gpt-4o-mini', max_tokens: 512, temperature: 0.3 },
+      },
+    });
+    const config = loadConfig();
+    expect(Object.keys(config.tasks).sort()).toEqual(['summarization', 'user_intent']);
+    expect(config.tasks.summarization.provider).toBe('openai');
+    expect(config.tasks.summarization.model).toBe('gpt-4o-mini');
+    expect(config.tasks.summarization.maxTokens).toBe(512);
+    expect(config.tasks.summarization.temperature).toBe(0.3);
   });
 
   test('throws when tasks is an array instead of object', () => {

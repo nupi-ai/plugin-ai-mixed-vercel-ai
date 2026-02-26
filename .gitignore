@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+/index.js
 
 # Downloaded proto files (fetched on-demand)
 proto/

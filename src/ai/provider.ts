@@ -106,6 +106,13 @@ export interface RouteResult {
   taskConfig: TaskConfig;
 }
 
+/** Event types that route to the summarization category fallback. */
+export const SUMMARIZATION_EVENT_TYPES: ReadonlySet<string> = new Set([
+  'journal_compaction',
+  'conversation_compaction',
+  'scheduled_task',
+]);
+
 /** ModelRouter provides lazy-cached model instances per event type. */
 export class ModelRouter {
   private cache = new Map<string, RouteResult>();
@@ -124,7 +131,12 @@ export class ModelRouter {
     const cached = this.cache.get(key);
     if (cached) return cached;
 
-    const taskConfig = this.config.tasks[key];
+    let taskConfig = this.config.tasks[key];
+    let viaSummarizationFallback = false;
+    if (!taskConfig && SUMMARIZATION_EVENT_TYPES.has(key)) {
+      taskConfig = this.config.tasks['summarization'];
+      viaSummarizationFallback = !!taskConfig;
+    }
     if (!taskConfig) {
       throw new MissingTaskConfigError(key, Object.keys(this.config.tasks));
     }
@@ -132,7 +144,8 @@ export class ModelRouter {
     const model = createModel(taskConfig);
     const result: RouteResult = { model, taskConfig };
     this.cache.set(key, result);
-    console.log(`ModelRouter: created ${taskConfig.provider}/${taskConfig.model} for '${key}'`);
+    const fallbackNote = viaSummarizationFallback ? ' (via summarization fallback)' : '';
+    console.log(`ModelRouter: created ${taskConfig.provider}/${taskConfig.model} for '${key}'${fallbackNote}`);
     return result;
   }
 }

@@ -25,19 +25,22 @@ spec:
       type: object
       description: >
         Per-event-type model configuration. Each key is an event type
-        (user_intent, session_output, history_summary, clarification,
-        memory_flush, scheduled_task, session_slug, onboarding) and each
-        value is a complete config block with provider, model, and optional
-        api_key, base_url, max_tokens, temperature. No inheritance between
-        tasks — each must be self-contained.
+        (user_intent, session_output, clarification, onboarding,
+        journal_compaction, conversation_compaction, scheduled_task) or a
+        category default (summarization) and each value is a complete config
+        block with provider, model, and optional api_key, base_url,
+        max_tokens, temperature. No inheritance between tasks — each must be
+        self-contained. The "summarization" key serves as a fallback for
+        journal_compaction, conversation_compaction, and scheduled_task when
+        those event types have no explicit config.
       example:
         user_intent:
           provider: anthropic
-          model: claude-sonnet-4-5-20250929
+          model: claude-sonnet-4-5-latest
           api_key: sk-ant-...
           max_tokens: 2048
           temperature: 0.7
-        history_summary:
+        summarization:
           provider: openai
           model: gpt-4o-mini
           api_key: sk-...
